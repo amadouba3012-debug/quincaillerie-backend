@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A.I.B et Frères - Gestion de Quincaillerie</title>
+
+    <!-- Bootstrap 5, FontAwesome & Google Fonts -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #d9383a;
+            --bg-light: #f4f6f9;
+            --sidebar-bg: #ffffff;
+            --text-dark: #2c3e50;
+            --text-muted: #7f8c8d;
+            --border-color: #e2e8f0;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .brand {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .brand .icon {
+            font-size: 1.8rem;
+            color: var(--primary-color);
+        }
+
+        .brand-text h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin: 0;
+            color: var(--text-dark);
+        }
+
+        .brand-text small {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .nav-menu {
+            flex: 1;
+            padding: 15px 0;
+            overflow-y: auto;
+        }
+
+        .nav-item-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 12px 20px;
+            border: none;
+            background: transparent;
+            color: var(--text-dark);
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+        }
+
+        .nav-item-btn:hover {
+            background-color: rgba(0, 0, 0, 0.04);
+        }
+
+        .nav-item-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .top-header {
+            background: white;
+            padding: 15px 30px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .content-body {
+            padding: 25px;
+            flex: 1;
+        }
+
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+            background: white;
+        }
+
+        .stat-card {
+            border-left: 5px solid;
+        }
+
+        .banner-vente {
+            background-color: #00a8cc;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+        }
+
+        /* GESTION INTELLIGENTE DE L'IMPRESSION */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 8mm;
+            }
+
+            body * {
+                visibility: hidden !important;
+            }
+
+            #factureImprimable, #factureImprimable * {
+                visibility: visible !important;
+            }
+
+            #factureImprimable {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                background: white !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                font-size: 13px !important;
+            }
+
+            table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+            }
+
+            th, td {
+                padding: 6px 8px !important;
+                border: 1px solid #000 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container" id="app-container">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="brand">
+                <i class="fa-solid fa-store icon"></i>
+                <div class="brand-text">
+                    <h3>A.I.B ET FRÈRES</h3>
+                    <small>Quincaillerie Générale</small>
+                </div>
+            </div>
+
+            <nav class="nav-menu">
+                <button class="nav-item-btn active" onclick="switchSection('accueil', this)">
+                    <i class="fa-solid fa-house"></i> ACCUEIL
+                </button>
+                <button class="nav-item-btn" onclick="switchSection('vente', this)">
+                    <i class="fa-solid fa-cart-shopping"></i> VENTE / COMMANDE
+                </button>
+                <button class="nav-item-btn" onclick="switchSection('stock', this)">
+                    <i class="fa-solid fa-boxes-stacked"></i> STOCK GENERAL
+                </button>
+                <button class="nav-item-btn" onclick="switchSection('credit-client', this)">
+                    <i class="fa-solid fa-hand-holding-dollar"></i> CREDIT CLIENT
+                </button>
+                <button class="nav-item-btn" onclick="switchSection('ajout', this)">
+                    <i class="fa-solid fa-plus-circle"></i> NOUVEAU PRODUIT
+                </button>
+                <button class="nav-item-btn" onclick="switchSection('historique', this); chargerHistorique();">
+                    <i class="fa-solid fa-clock-rotate-left"></i> HISTORIQUE
+                </button>
+                <button class="nav-item-btn" onclick="switchSection('corbeille', this)">
+                    <i class="fa-solid fa-trash-can"></i> CORBEILLE <span id="badgeCorbeille" class="badge bg-danger ms-auto">0</span>
+                </button>
+            </nav>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+
+            <header class="top-header">
+                <div>
+                    <h4 id="current-page-title" class="fw-bold mb-0 text-uppercase">ACCUEIL</h4>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <span id="live-datetime" class="badge bg-light text-dark border fs-6"></span>
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-store fs-4 text-secondary"></i>
+                        <span class="fw-semibold">Espace de Gestion</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-body">
+
+                <!-- SECTION 1 : ACCUEIL -->
+                <section id="page-accueil" class="page-section">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <div class="card stat-card border-primary p-3">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <small class="text-muted text-uppercase fw-bold">Total Références</small>
+                                        <h3 id="statTotalRef" class="fw-bold mb-0 text-primary">0</h3>
+                                    </div>
+                                    <i class="fa-solid fa-boxes-stacked fs-1 text-primary opacity-25"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card stat-card border-success p-3">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <small class="text-muted text-uppercase fw-bold">Valeur du Stock</small>
+                                        <h3 id="statValeurStock" class="fw-bold mb-0 text-success">0 FCFA</h3>
+                                    </div>
+                                    <i class="fa-solid fa-wallet fs-1 text-success opacity-25"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card stat-card border-warning p-3">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <small class="text-muted text-uppercase fw-bold">Bénéfice Estimé</small>
+                                        <h3 id="statBenefice" class="fw-bold mb-0 text-warning">0 FCFA</h3>
+                                    </div>
+                                    <i class="fa-solid fa-chart-line fs-1 text-warning opacity-25"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-4">
+                        <h5 class="fw-bold mb-3"><i class="fa-solid fa-circle-info me-2 text-primary"></i>Bienvenue dans le système de gestion</h5>
+                        <p class="text-muted">Sélectionnez une option dans le menu de gauche pour enregistrer une vente, consulter le stock ou ajouter de nouveaux articles.</p>
+                    </div>
+                </section>
+
+                <!-- SECTION 2 : VENTE -->
+                <section id="page-vente" class="page-section" style="display: none;">
+                    <div class="row g-3">
+                        <div class="col-lg-7">
+                            <div class="card p-3 mb-3">
+                                <div class="banner-vente mb-3">
+                                    <span><i class="fa-solid fa-cart-shopping me-2"></i>VENTE</span>
+                                    <span>TOTAL: <span id="bannerTotal">0 FCFA</span></span>
+                                </div>
+
+                                <div class="row g-2 mb-3">
+                                    <div class="col-md-8">
+                                        <label class="form-label fw-semibold small">Choisir un article</label>
+                                        <select id="selectProduit" class="form-select form-select-sm"></select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-semibold small">Quantité</label>
+                                        <input type="number" id="inputQuantite" class="form-control form-select-sm" min="1" value="1">
+                                    </div>
+                                    <div class="col-12 mt-2">
+                                        <button type="button" onclick="ajouterAuPanier()" class="btn btn-primary btn-sm w-100 fw-bold">
+                                            <i class="fa-solid fa-plus me-1"></i>Ajouter à la commande
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="table-responsive mb-3 border rounded" style="max-height: 180px;">
+                                    <table class="table table-sm align-middle mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Article</th>
+                                                <th>Qté</th>
+                                                <th>Total</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tableauPanier">
+                                            <tr><td colspan="4" class="text-center text-muted py-2">Panier vide</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <form id="formCommande" class="row g-2">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold small">Mode de Règlement</label>
+                                        <select id="modeReglement" class="form-select form-select-sm">
+                                            <option value="ESPÈCE">ESPÈCE</option>
+                                            <option value="WAVE / OM">WAVE / OM</option>
+                                            <option value="CHÈQUE">CHÈQUE</option>
+                                            <option value="VIREMENT">VIREMENT</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold small">Statut Paiement</label>
+                                        <select id="statutPaiement" class="form-select form-select-sm">
+                                            <option value="PAYÉ">PAYÉ</option>
+                                            <option value="NON PAYÉ">NON PAYÉ</option>
+                                            <option value="ACOMPTE">ACOMPTE</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-7">
+                                        <label class="form-label fw-semibold small">Nom Client</label>
+                                        <input type="text" id="clientName" class="form-control form-select-sm" placeholder="Nom et prénom" required>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label class="form-label fw-semibold small">Contact Client</label>
+                                        <input type="text" id="clientContact" class="form-control form-select-sm" placeholder="Téléphone">
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold small">Total Payé par le Client</label>
+                                        <input type="number" id="totalPaye" class="form-control form-select-sm" value="0" oninput="calculerMonnaie()">
+                                    </div>
+                                    <div class="col-md-6 d-flex align-items-center">
+                                        <div class="fw-bold small">
+                                            Monnaie à rendre : <span id="txtMonnaie" class="text-primary fs-6">0 FCFA</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-12">
+                                        <label class="form-label fw-semibold small">Statut Livraison</label>
+                                        <select id="statutLivraison" class="form-select form-select-sm">
+                                            <option value="LIVRÉ">LIVRÉ</option>
+                                            <option value="EN ATTENTE">EN ATTENTE</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-12 bg-light p-2 rounded text-end mt-2">
+                                        <span class="fw-bold me-2">Net à payer :</span>
+                                        <span id="txtNetAPayer" class="fw-bold fs-5 text-success">0 FCFA</span>
+                                    </div>
+
+                                    <div class="col-6 mt-2">
+                                        <button type="button" onclick="viderPanier()" class="btn btn-danger btn-sm w-100 fw-bold">ANNULER</button>
+                                    </div>
+                                    <div class="col-6 mt-2">
+                                        <button type="submit" class="btn btn-success btn-sm w-100 fw-bold">TERMINER & IMPRIMER</button>
+                                    </div>
+
+                                    <div class="col-6 mt-1">
+                                        <button type="button" onclick="imprimerDocument('FACTURE PRO FORMA')" class="btn btn-outline-secondary btn-sm w-100">IMPRESSION PRO FORMA</button>
+                                    </div>
+                                    <div class="col-6 mt-1">
+                                        <button type="button" onclick="imprimerDocument('DEVIS')" class="btn btn-outline-warning btn-sm w-100">IMPRESSION DEVIS</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-5">
+                            <div class="card p-3">
+                                <div class="bg-success text-white p-2 rounded mb-2 fw-bold text-center small">
+                                    TOUS LES PRODUITS
+                                </div>
+                                <div class="input-group input-group-sm mb-2">
+                                    <input type="text" id="searchProduitDirect" class="form-control" placeholder="Recherche..." onkeyup="filtrerProduitsDirects()">
+                                    <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
+                                </div>
+                                <div class="table-responsive" style="max-height: 400px;">
+                                    <table class="table table-hover table-sm align-middle">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>N°</th>
+                                                <th>Produit</th>
+                                                <th>Qté</th>
+                                                <th>Prix</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tableauProduitsDirects"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION 3 : STOCK -->
+                <section id="page-stock" class="page-section" style="display: none;">
+                    <div class="card p-4">
+                        <h5 class="fw-bold mb-3"><i class="fa-solid fa-boxes-packing me-2"></i>Stock Général des Articles</h5>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Nom de l'Article</th>
+                                        <th>Prix Achat</th>
+                                        <th>Prix Vente</th>
+                                        <th>Quantité en Stock</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableauProduits"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION 4 : CREDIT CLIENT -->
+                <section id="page-credit-client" class="page-section" style="display: none;">
+                    <div class="card p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <button class="btn btn-primary btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalNouveauCredit">
+                                <i class="fa-solid fa-plus me-1"></i> AJOUTER UN CRÉDIT CLIENT
+                            </button>
+                        </div>
+
+                        <div class="p-3 bg-light rounded text-center mb-3">
+                            <small class="text-muted text-uppercase fw-bold">TOTAL CRÉDIT CLIENTS</small>
+                            <h2 id="totalCreditClient" class="fw-bold text-danger mb-0">0 FCFA</h2>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Client</th>
+                                        <th>Contact</th>
+                                        <th>Motif / Article</th>
+                                        <th class="text-end">Reste à Payer</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableauCreditsClients">
+                                    <tr><td colspan="5" class="text-center text-muted">Aucun crédit enregistré.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION 5 : AJOUTER UN PRODUIT -->
+                <section id="page-ajout" class="page-section" style="display: none;">
+                    <div class="card p-4 col-md-8 mx-auto">
+                        <h5 class="fw-bold mb-3"><i class="fa-solid fa-box-archive me-2"></i>Ajouter un Nouveau Produit</h5>
+                        <form id="formProduit" class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Désignation de l'article</label>
+                                <input type="text" id="nom" class="form-control" placeholder="ex: Ciment 50kg, Marteau, Tuyau PVC 32" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Prix d'Achat (FCFA)</label>
+                                <input type="number" id="prixAchat" class="form-control" placeholder="0" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Prix de Vente (FCFA)</label>
+                                <input type="number" id="prixVente" class="form-control" placeholder="0" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Quantité Initiale</label>
+                                <input type="number" id="quantiteStock" class="form-control" placeholder="0" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Seuil d'Alerte Stock</label>
+                                <input type="number" id="seuilAlerte" class="form-control" value="2" required>
+                            </div>
+                            <div class="col-12 mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold">
+                                    <i class="fa-solid fa-floppy-disk me-2"></i>Enregistrer le Produit
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- SECTION 6 : HISTORIQUE ET VENTES DU JOUR -->
+                <section id="page-historique" class="page-section" style="display: none;">
+                    <div class="card p-4">
+                        <div class="row align-items-center mb-3 g-2">
+                            <div class="col-md-4">
+                                <h5 class="fw-bold mb-0"><i class="fa-solid fa-receipt me-2"></i>Historique & Ventes</h5>
+                            </div>
+                            <div class="col-md-8 d-flex gap-2 justify-content-end align-items-center">
+                                <button onclick="filtrerVentesAujourdhui()" class="btn btn-success btn-sm fw-bold">
+                                    <i class="fa-solid fa-calendar-day me-1"></i> Ventes du Jour
+                                </button>
+                                <input type="date" id="filtreDateVente" class="form-control form-control-sm w-auto" onchange="filtrerVentesParDate(this.value)">
+                                <button onclick="chargerHistorique()" class="btn btn-outline-secondary btn-sm">
+                                    <i class="fa-solid fa-rotate me-1"></i> Tout afficher
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Récapitulatif du total des ventes filtrées -->
+                        <div class="alert alert-info d-flex justify-content-between align-items-center py-2 px-3 mb-3">
+                            <span class="fw-bold"><i class="fa-solid fa-chart-pie me-2"></i>Total des ventes sélectionnées :</span>
+                            <span id="txtTotalVentesFiltrees" class="fw-bold fs-5 text-success">0 FCFA</span>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>N° Commande</th>
+                                        <th>Date & Heure</th>
+                                        <th>Client</th>
+                                        <th>Contact</th>
+                                        <th>Paiement</th>
+                                        <th>Livraison</th>
+                                        <th>Montant Total</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableauHistorique">
+                                    <tr><td colspan="8" class="text-center text-muted">Chargement de l'historique...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION 7 : CORBEILLE -->
+                <section id="page-corbeille" class="page-section" style="display: none;">
+                    <div class="card p-4">
+                        <h5 class="fw-bold text-danger mb-3"><i class="fa-solid fa-trash-arrow-up me-2"></i>Articles Archivés</h5>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-secondary">
+                                    <tr>
+                                        <th>Article</th>
+                                        <th>Prix Vente</th>
+                                        <th>Stock Restant</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableauCorbeille"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL : NOUVEAU CREDIT CLIENT -->
+    <div class="modal fade" id="modalNouveauCredit" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold">Ajouter un Crédit Client</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formCreditClient" onsubmit="ajouterCreditClient(event)">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Nom du Client</label>
+                            <input type="text" id="creditClientNom" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Contact Client</label>
+                            <input type="text" id="creditClientContact" class="form-control" placeholder="Téléphone">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Motif / Désignation de la dette</label>
+                            <input type="text" id="creditClientMotif" class="form-control" placeholder="ex: Ciment + Fer à béton">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Montant Dû (FCFA)</label>
+                            <input type="number" id="creditClientMontant" class="form-control" required min="1">
+                        </div>
+                        <button type="submit" class="btn btn-success w-100 fw-bold">Enregistrer le Crédit</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL : MODIFICATION DE COMMANDES -->
+    <div class="modal fade" id="modalModifierCommande" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square me-2"></i>Modifier la Commande</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Nom du Client</label>
+                            <input type="text" id="editCmdClient" class="form-control" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Statut Paiement</label>
+                            <select id="editCmdPaiement" class="form-select">
+                                <option value="PAYÉ">PAYÉ</option>
+                                <option value="NON PAYÉ">NON PAYÉ</option>
+                                <option value="ACOMPTE">ACOMPTE</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Statut Livraison</label>
+                            <select id="editCmdLivraison" class="form-select">
+                                <option value="LIVRÉ">LIVRÉ</option>
+                                <option value="EN ATTENTE">EN ATTENTE</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h6 class="fw-bold mb-3"><i class="fa-solid fa-cart-shopping me-2"></i>Articles de la Commande</h6>
+
+                    <div class="row g-2 mb-3 bg-light p-2 rounded align-items-center border">
+                        <div class="col-md-7">
+                            <select id="selectProduitEdit" class="form-select form-select-sm"></select>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="number" id="qteProduitEdit" class="form-control form-control-sm" value="1" min="1">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" onclick="ajouterArticleEdit()" class="btn btn-sm btn-primary w-100 fw-bold">
+                                <i class="fa-solid fa-plus me-1"></i>Ajouter
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle">
+                            <thead class="table-secondary">
+                                <tr>
+                                    <th>Désignation</th>
+                                    <th style="width: 140px;">Quantité</th>
+                                    <th>Prix Unitaire</th>
+                                    <th>Sous-total</th>
+                                    <th style="width: 50px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableauArticlesEdit"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="text-end fw-bold fs-5 text-success mb-3">
+                        Nouveau Total : <span id="editTotalCommande">0</span> FCFA
+                    </div>
+
+                    <button type="button" onclick="soumettreModificationCommande()" class="btn btn-warning w-100 fw-bold py-2">
+                        <i class="fa-solid fa-floppy-disk me-2"></i>Enregistrer & Mettre à jour les stocks
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ZONE D'IMPRESSION DOCUMENT (FACTURE / PRO FORMA / DEVIS) -->
+    <div id="factureImprimable" class="p-3 d-none">
+        <div class="facture-container">
+            <div class="d-flex justify-content-between align-items-start border-bottom pb-3 mb-3">
+                <div>
+                    <h4 class="fw-bold mb-1" style="letter-spacing: 0.5px;">QUINCAILLERIE GENERALE</h4>
+                    <h5 class="fw-bold text-uppercase mb-1">A.I.B et Frères Diabir / Soforal</h5>
+                    <p class="mb-0 small fw-semibold">RC: SN. ZGR.2015.A 1261 | NINEA: 005658747</p>
+                    <p class="mb-0 small fw-bold">Tél: +221 78 600 08 63 - ZIGUINCHOR</p>
+                </div>
+                <div class="text-end">
+                    <h3 id="docTitleImprimable" class="fw-bold text-uppercase border border-dark p-2 mb-1" style="letter-spacing: 2px;">FACTURE</h3>
+                    <p class="mb-0 small"><strong>Ziguinchor, le :</strong> <span id="facDate"></span></p>
+                </div>
+            </div>
+
+            <div class="row mb-3 pb-2 border-bottom">
+                <div class="col-7">
+                    <p class="mb-1 fs-6"><strong>M. / Client :</strong> <span id="facClient" class="text-uppercase fw-bold"></span> <u>Doit</u></p>
+                    <p class="mb-0 small"><strong>Contact :</strong> <span id="facContact"></span></p>
+                </div>
+                <div class="col-5 text-end small">
+                    <p class="mb-0"><strong>Paiement :</strong> <span id="facPaiement"></span> | <strong>Livraison :</strong> <span id="facLivraison"></span></p>
+                </div>
+            </div>
+
+            <table class="table table-bordered align-middle mb-3">
+                <thead style="background-color: #f0f0f0;">
+                    <tr class="text-uppercase text-center">
+                        <th style="width: 12%;">Quantité</th>
+                        <th style="width: 53%;">Désignation</th>
+                        <th style="width: 17%;">Prix Unitaire</th>
+                        <th style="width: 18%;">Prix Total</th>
+                    </tr>
+                </thead>
+                <tbody id="facLignes"></tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="3" class="text-end fw-bold text-uppercase">TOTAL</td>
+                        <td class="fw-bold fs-6 text-end"><span id="facMontantTotal"></span> FCFA</td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <div class="mt-3 pt-2 border-top">
+                <p class="mb-1"><strong>Arrêté la présente facture à la somme de :</strong> <span id="facSommeLettres" class="fw-bold text-uppercase"></span></p>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4 pt-2">
+                <div class="text-center" style="width: 200px;">
+                    <small class="text-muted">Signature Client</small>
+                </div>
+                <div class="text-center" style="width: 200px;">
+                    <small class="text-muted">La Direction</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts Bootstrap JS & Logique Application -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API_PRODUITS = '/api/produits';
+        const API_COMMANDES = '/api/commandes';
+
+        let listeProduits = [];
+        let panierCommande = [];
+        let listeCommandes = [];
+        let creditsClients = [];
+        let commandeEnEdition = null;
+
+        function mettreAJourHorloge() {
+            const el = document.getElementById('live-datetime');
+            if (el) {
+                const maintenant = new Date();
+                const dateFmt = maintenant.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                const heureFmt = maintenant.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                el.innerText = `le ${dateFmt} à ${heureFmt}`;
+            }
+        }
+
+        function switchSection(sectionId, btnElement) {
+            document.querySelectorAll('.page-section').forEach(s => s.style.display = 'none');
+            document.querySelectorAll('.nav-item-btn').forEach(b => b.classList.remove('active'));
+
+            const targetSection = document.getElementById(`page-${sectionId}`);
+            if (targetSection) targetSection.style.display = 'block';
+            if (btnElement) btnElement.classList.add('active');
+
+            const titleMap = {
+                'accueil': 'ACCUEIL',
+                'vente': 'VENTE / NOUVELLE COMMANDE',
+                'stock': 'STOCK GENERAL DES ARTICLES',
+                'credit-client': 'CREDIT CLIENT',
+                'ajout': 'AJOUTER UN PRODUIT',
+                'historique': 'HISTORIQUE DES TRANSACTIONS',
+                'corbeille': 'CORBEILLE DES ARTICLES'
+            };
+            const titleEl = document.getElementById('current-page-title');
+            if (titleEl) titleEl.innerText = titleMap[sectionId] || 'GESTION';
+        }
+
+        function Unites(nombre) {
+            const u = ['', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf', 'dix', 'onze', 'douze', 'treize', 'quatorze', 'quinze', 'seize', 'dix-sept', 'dix-huit', 'dix-neuf'];
+            return u[nombre] || '';
+        }
+
+        function Dizaines(nombre) {
+            const d = ['', 'dix', 'vingt', 'trente', 'quarante', 'cinquante', 'soixante', 'soixante-dix', 'quatre-vingt', 'quatre-vingt-dix'];
+            if (nombre < 20) return Unites(nombre);
+            const dizaine = Math.floor(nombre / 10);
+            const reste = nombre % 10;
+            if (dizaine === 7 || dizaine === 9) {
+                return d[dizaine - 1] + '-' + Unites(10 + reste);
+            }
+            return d[dizaine] + (reste ? '-' + Unites(reste) : '');
+        }
+
+        function NombreEnLettres(nombre) {
+            if (nombre === 0) return 'zéro';
+            if (nombre < 0) return 'moins ' + NombreEnLettres(-nombre);
+
+            let result = '';
+
+            if (Math.floor(nombre / 1000000) > 0) {
+                const millions = Math.floor(nombre / 1000000);
+                result += (millions === 1 ? 'un million' : NombreEnLettres(millions) + ' millions') + ' ';
+                nombre %= 1000000;
+            }
+
+            if (Math.floor(nombre / 1000) > 0) {
+                const milliers = Math.floor(nombre / 1000);
+                result += (milliers === 1 ? 'mille' : NombreEnLettres(milliers) + ' mille') + ' ';
+                nombre %= 1000;
+            }
+
+            if (Math.floor(nombre / 100) > 0) {
+                const centaines = Math.floor(nombre / 100);
+                result += (centaines === 1 ? 'cent' : Unites(centaines) + ' cent') + ' ';
+                nombre %= 100;
+            }
+
+            if (nombre > 0) {
+                result += Dizaines(nombre);
+            }
+
+            return result.trim();
+        }
+
+        async function chargerProduits() {
+            try {
+                const res = await fetch(API_PRODUITS);
+                if (!res.ok) throw new Error("Erreur de chargement");
+                listeProduits = await res.json();
+
+                let htmlTable = '';
+                let htmlSelect = '<option value="">-- Choisir un produit --</option>';
+                let htmlDirects = '';
+                let totalVal = 0, totalBen = 0;
+
+                if (!Array.isArray(listeProduits) || listeProduits.length === 0) {
+                    htmlTable = `<tr><td colspan="5" class="text-center text-muted">Aucun article dans le stock.</td></tr>`;
+                    htmlDirects = `<tr><td colspan="4" class="text-center text-muted">Aucun produit.</td></tr>`;
+                } else {
+                    listeProduits.forEach((p, idx) => {
+                        const qte = p.quantiteStock || 0;
+                        const pVente = p.prixVente || 0;
+                        const pAchat = p.prixAchat || 0;
+
+                        totalVal += pVente * qte;
+                        totalBen += (pVente - pAchat) * qte;
+
+                        htmlTable += `
+                            <tr>
+                                <td><strong>${p.nom}</strong></td>
+                                <td>${pAchat.toLocaleString()} FCFA</td>
+                                <td>${pVente.toLocaleString()} FCFA</td>
+                                <td><span class="badge ${qte <= (p.seuilAlerte || 2) ? 'bg-danger' : 'bg-success'}">${qte}</span></td>
+                                <td>
+                                    <button onclick="supprimerProduit(${p.id})" class="btn btn-sm btn-outline-danger">
+                                        <i class="fa-solid fa-box-archive"></i> Archiver
+                                    </button>
+                                </td>
+                            </tr>`;
+
+                        htmlSelect += `<option value="${p.id}">${p.nom} (Stock : ${qte}) - ${pVente.toLocaleString()} FCFA</option>`;
+
+                        htmlDirects += `
+                            <tr style="cursor: pointer;" onclick="ajouterDirectParId(${p.id})">
+                                <td>${idx + 1}</td>
+                                <td><strong>${p.nom}</strong></td>
+                                <td><span class="badge bg-secondary">${qte}</span></td>
+                                <td class="fw-bold text-success">${pVente.toLocaleString()}</td>
+                            </tr>`;
+                    });
+                }
+
+                if (document.getElementById('tableauProduits')) document.getElementById('tableauProduits').innerHTML = htmlTable;
+                if (document.getElementById('selectProduit')) document.getElementById('selectProduit').innerHTML = htmlSelect;
+                if (document.getElementById('tableauProduitsDirects')) document.getElementById('tableauProduitsDirects').innerHTML = htmlDirects;
+                if (document.getElementById('statTotalRef')) document.getElementById('statTotalRef').innerText = listeProduits.length || 0;
+                if (document.getElementById('statValeurStock')) document.getElementById('statValeurStock').innerText = totalVal.toLocaleString() + ' FCFA';
+                if (document.getElementById('statBenefice')) document.getElementById('statBenefice').innerText = totalBen.toLocaleString() + ' FCFA';
+
+                await chargerCorbeille();
+            } catch (err) {
+                console.error("Erreur chargerProduits:", err);
+            }
+        }
+
+        function ajouterDirectParId(id) {
+            const sel = document.getElementById('selectProduit');
+            if (sel) {
+                sel.value = id;
+                ajouterAuPanier();
+            }
+        }
+
+        function filtrerProduitsDirects() {
+            const input = document.getElementById('searchProduitDirect');
+            if (!input) return;
+            const filtre = input.value.toLowerCase();
+            const trs = document.querySelectorAll('#tableauProduitsDirects tr');
+            trs.forEach(tr => {
+                const text = tr.innerText.toLowerCase();
+                tr.style.display = text.includes(filtre) ? '' : 'none';
+            });
+        }
+
+        function ajouterAuPanier() {
+            const prodId = parseInt(document.getElementById('selectProduit').value);
+            const qte = parseInt(document.getElementById('inputQuantite').value);
+
+            if (!prodId || isNaN(qte) || qte <= 0) {
+                return alert("Veuillez sélectionner un produit et préciser une quantité valide.");
+            }
+
+            const prod = listeProduits.find(p => p.id === prodId);
+            if (!prod) return;
+
+            if (qte > prod.quantiteStock) {
+                return alert("Stock insuffisant ! Disponible : " + prod.quantiteStock);
+            }
+
+            const indexExistant = panierCommande.findIndex(item => item.produit.id === prodId);
+            if (indexExistant !== -1) {
+                if (panierCommande[indexExistant].quantite + qte > prod.quantiteStock) {
+                    return alert("Stock insuffisant pour cette quantité cumulée.");
+                }
+                panierCommande[indexExistant].quantite += qte;
+                panierCommande[indexExistant].sousTotal = panierCommande[indexExistant].quantite * prod.prixVente;
+            } else {
+                panierCommande.push({
+                    produit: prod,
+                    quantite: qte,
+                    prixUnitaire: prod.prixVente,
+                    sousTotal: qte * prod.prixVente
+                });
+            }
+
+            afficherPanier();
+            document.getElementById('inputQuantite').value = 1;
+        }
+
+        function viderPanier() {
+            panierCommande = [];
+            afficherPanier();
+        }
+
+        function retirerDuPanier(index) {
+            panierCommande.splice(index, 1);
+            afficherPanier();
+        }
+
+        function afficherPanier() {
+            let htmlPanier = '';
+            let total = 0;
+
+            if (panierCommande.length === 0) {
+                htmlPanier = `<tr><td colspan="4" class="text-center text-muted py-2">Panier vide</td></tr>`;
+            } else {
+                panierCommande.forEach((item, index) => {
+                    total += item.sousTotal;
+                    htmlPanier += `
+                        <tr>
+                            <td><strong>${item.produit.nom}</strong></td>
+                            <td>${item.quantite}</td>
+                            <td>${item.sousTotal.toLocaleString()}</td>
+                            <td>
+                                <button type="button" onclick="retirerDuPanier(${index})" class="btn btn-sm text-danger border-0">
+                                    <i class="fa-solid fa-xmark fs-6"></i>
+                                </button>
+                            </td>
+                        </tr>`;
+                });
+            }
+
+            if (document.getElementById('tableauPanier')) document.getElementById('tableauPanier').innerHTML = htmlPanier;
+            if (document.getElementById('bannerTotal')) document.getElementById('bannerTotal').innerText = total.toLocaleString() + ' FCFA';
+            if (document.getElementById('txtNetAPayer')) document.getElementById('txtNetAPayer').innerText = total.toLocaleString() + ' FCFA';
+            calculerMonnaie();
+        }
+
+        function calculerMonnaie() {
+            const net = panierCommande.reduce((acc, item) => acc + item.sousTotal, 0);
+            const totalPayeInput = document.getElementById('totalPaye');
+            const totalPaye = totalPayeInput ? (parseFloat(totalPayeInput.value) || 0) : 0;
+            const monnaie = Math.max(0, totalPaye - net);
+
+            const txtMonnaie = document.getElementById('txtMonnaie');
+            if (txtMonnaie) txtMonnaie.innerText = monnaie.toLocaleString() + ' FCFA';
+        }
+
+        function imprimerDocument(titleType) {
+            if (panierCommande.length === 0) {
+                return alert("Le panier est vide. Impossible de générer un document.");
+            }
+
+            const totalBrut = panierCommande.reduce((acc, item) => acc + item.sousTotal, 0);
+            const clientNom = document.getElementById('clientName').value || 'Client Passager';
+            const clientContact = document.getElementById('clientContact').value || 'N/A';
+            const statutPaiement = document.getElementById('statutPaiement').value;
+            const statutLivraison = document.getElementById('statutLivraison').value;
+
+            const aujourdhui = new Date();
+            const dateFormatee = aujourdhui.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + aujourdhui.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+            document.getElementById('docTitleImprimable').innerText = titleType;
+            document.getElementById('facDate').innerText = dateFormatee;
+            document.getElementById('facClient').innerText = clientNom;
+            document.getElementById('facContact').innerText = clientContact;
+            document.getElementById('facPaiement').innerText = statutPaiement;
+            document.getElementById('facLivraison').innerText = statutLivraison;
+            document.getElementById('facMontantTotal').innerText = totalBrut.toLocaleString();
+            document.getElementById('facSommeLettres').innerText = NombreEnLettres(totalBrut) + ' FCFA';
+
+            let htmlFacLignes = '';
+            panierCommande.forEach(item => {
+                htmlFacLignes += `
+                    <tr>
+                        <td class="text-center">${item.quantite}</td>
+                        <td>${item.produit.nom}</td>
+                        <td class="text-end">${item.prixUnitaire.toLocaleString()}</td>
+                        <td class="text-end">${item.sousTotal.toLocaleString()}</td>
+                    </tr>`;
+            });
+
+            document.getElementById('facLignes').innerHTML = htmlFacLignes;
+
+            const elem = document.getElementById('factureImprimable');
+            elem.classList.remove('d-none');
+            window.print();
+            elem.classList.add('d-none');
+        }
+
+        const formCmd = document.getElementById('formCommande');
+        if (formCmd) {
+            formCmd.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                if (panierCommande.length === 0) {
+                    return alert("Le panier est vide. Veuillez ajouter au moins un produit.");
+                }
+
+                const totalBrut = panierCommande.reduce((acc, item) => acc + item.sousTotal, 0);
+
+                const commandePayload = {
+                    nomClient: document.getElementById('clientName').value,
+                    contactClient: document.getElementById('clientContact').value,
+                    statutPaiement: document.getElementById('statutPaiement').value,
+                    statutLivraison: document.getElementById('statutLivraison').value,
+                    montantTotal: totalBrut,
+                    lignes: panierCommande.map(item => ({
+                        produit: { id: item.produit.id },
+                        quantite: item.quantite,
+                        prixUnitaire: item.prixUnitaire,
+                        sousTotal: item.sousTotal
+                    }))
+                };
+
+                try {
+                    const res = await fetch(API_COMMANDES, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(commandePayload)
+                    });
+
+                    if (res.ok) {
+                        imprimerDocument('FACTURE');
+                        viderPanier();
+                        document.getElementById('formCommande').reset();
+                        await chargerProduits();
+                    } else {
+                        const errText = await res.text();
+                        alert("Erreur lors de la validation : " + errText);
+                    }
+                } catch (err) {
+                    console.error("Erreur commande:", err);
+                    alert("Impossible de contacter le serveur.");
+                }
+            });
+        }
+
+        // HISTORIQUE & FILTRAGE DES VENTES DU JOUR
+        async function chargerHistorique() {
+            try {
+                const res = await fetch(API_COMMANDES);
+                if (!res.ok) throw new Error("Erreur de chargement");
+                listeCommandes = await res.json();
+                afficherCommandes(listeCommandes);
+            } catch (err) {
+                console.error("Erreur historique:", err);
+            }
+        }
+
+        function filtrerVentesAujourdhui() {
+            const aujourdhuiStr = new Date().toISOString().split('T')[0];
+            document.getElementById('filtreDateVente').value = aujourdhuiStr;
+            filtrerVentesParDate(aujourdhuiStr);
+        }
+
+        function filtrerVentesParDate(dateStr) {
+            if (!dateStr) {
+                afficherCommandes(listeCommandes);
+                return;
+            }
+
+            const commandesFiltrées = listeCommandes.filter(c => {
+                if (!c.dateCommande) return false;
+                const d = new Date(c.dateCommande).toISOString().split('T')[0];
+                return d === dateStr;
+            });
+
+            afficherCommandes(commandesFiltrées);
+        }
+
+        function afficherCommandes(liste) {
+            let html = '';
+            let totalSomme = 0;
+
+            if (!Array.isArray(liste) || liste.length === 0) {
+                html = `<tr><td colspan="8" class="text-center text-muted">Aucune transaction trouvée pour cette période.</td></tr>`;
+            } else {
+                liste.sort((a, b) => new Date(b.dateCommande) - new Date(a.dateCommande));
+
+                liste.forEach(c => {
+                    const totalCmd = c.montantTotal || 0;
+                    totalSomme += totalCmd;
+
+                    const dateFmt = c.dateCommande ? new Date(c.dateCommande).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A';
+                    const badgePaiement = c.statutPaiement === 'PAYÉ' ? 'bg-success' : (c.statutPaiement === 'ACOMPTE' ? 'bg-warning text-dark' : 'bg-danger');
+                    const badgeLivraison = c.statutLivraison === 'LIVRÉ' ? 'bg-info text-dark' : 'bg-secondary';
+
+                    html += `
+                        <tr>
+                            <td><strong>#${c.id}</strong></td>
+                            <td>${dateFmt}</td>
+                            <td>${c.nomClient || 'Client Passager'}</td>
+                            <td>${c.contactClient || '-'}</td>
+                            <td><span class="badge ${badgePaiement}">${c.statutPaiement}</span></td>
+                            <td><span class="badge ${badgeLivraison}">${c.statutLivraison}</span></td>
+                            <td class="fw-bold text-success">${totalCmd.toLocaleString()} FCFA</td>
+                            <td>
+                                <button onclick="ouvrirModalEdition(${c.id})" class="btn btn-sm btn-warning fw-bold">
+                                    <i class="fa-solid fa-pen me-1"></i> Modifier
+                                </button>
+                            </td>
+                        </tr>`;
+                });
+            }
+
+            if (document.getElementById('tableauHistorique')) document.getElementById('tableauHistorique').innerHTML = html;
+            if (document.getElementById('txtTotalVentesFiltrees')) document.getElementById('txtTotalVentesFiltrees').innerText = totalSomme.toLocaleString() + ' FCFA';
+        }
+
+        // CRÉDIT CLIENT LOGIQUE
+        function ajouterCreditClient(e) {
+            e.preventDefault();
+            const nom = document.getElementById('creditClientNom').value;
+            const contact = document.getElementById('creditClientContact').value || '-';
+            const motif = document.getElementById('creditClientMotif').value || 'Achat marchandises';
+            const montant = parseFloat(document.getElementById('creditClientMontant').value);
+
+            creditsClients.push({ nom, contact, motif, montant });
+
+            afficherCreditsClients();
+            document.getElementById('formCreditClient').reset();
+            const modalEl = document.getElementById('modalNouveauCredit');
+            if (modalEl) {
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+            }
+        }
+
+        function afficherCreditsClients() {
+            let html = '';
+            let total = 0;
+
+            if (creditsClients.length === 0) {
+                html = `<tr><td colspan="5" class="text-center text-muted">Aucun crédit enregistré.</td></tr>`;
+            } else {
+                creditsClients.forEach((c, i) => {
+                    total += c.montant;
+                    html += `
+                        <tr>
+                            <td>${i + 1}</td>
+                            <td><strong>${c.nom}</strong></td>
+                            <td>${c.contact}</td>
+                            <td>${c.motif}</td>
+                            <td class="text-end fw-bold text-danger">${c.montant.toLocaleString()} FCFA</td>
+                        </tr>`;
+                });
+            }
+
+            if (document.getElementById('tableauCreditsClients')) document.getElementById('tableauCreditsClients').innerHTML = html;
+            if (document.getElementById('totalCreditClient')) document.getElementById('totalCreditClient').innerText = total.toLocaleString() + ' FCFA';
+        }
+
+        function ouvrirModalEdition(id) {
+            const cmd = listeCommandes.find(c => c.id === id);
+            if (!cmd) return;
+
+            commandeEnEdition = JSON.parse(JSON.stringify(cmd));
+
+            document.getElementById('editCmdClient').value = commandeEnEdition.nomClient || '';
+            document.getElementById('editCmdPaiement').value = commandeEnEdition.statutPaiement || 'PAYÉ';
+            document.getElementById('editCmdLivraison').value = commandeEnEdition.statutLivraison || 'LIVRÉ';
+
+            let optionsHtml = '<option value="">-- Sélectionner un article à ajouter --</option>';
+            listeProduits.forEach(p => {
+                optionsHtml += `<option value="${p.id}">${p.nom} (${p.prixVente} FCFA)</option>`;
+            });
+            document.getElementById('selectProduitEdit').innerHTML = optionsHtml;
+
+            afficherArticlesEdit();
+
+            const modal = new bootstrap.Modal(document.getElementById('modalModifierCommande'));
+            modal.show();
+        }
+
+        function afficherArticlesEdit() {
+            let html = '';
+            let total = 0;
+
+            if (!commandeEnEdition.lignes || commandeEnEdition.lignes.length === 0) {
+                html = `<tr><td colspan="5" class="text-center text-muted">Aucun article dans cette commande.</td></tr>`;
+            } else {
+                commandeEnEdition.lignes.forEach((ligne, index) => {
+                    const pu = ligne.prixUnitaire || (ligne.produit ? ligne.produit.prixVente : 0);
+                    const st = pu * ligne.quantite;
+                    ligne.sousTotal = st;
+                    total += st;
+
+                    html += `
+                        <tr>
+                            <td><strong>${ligne.produit ? ligne.produit.nom : 'Produit'}</strong></td>
+                            <td>
+                                <div class="input-group input-group-sm">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="ajusterQteEdit(${index}, -1)">-</button>
+                                    <input type="text" class="form-control text-center fw-bold" value="${ligne.quantite}" readonly>
+                                    <button class="btn btn-outline-secondary" type="button" onclick="ajusterQteEdit(${index}, 1)">+</button>
+                                </div>
+                            </td>
+                            <td>${pu.toLocaleString()} FCFA</td>
+                            <td class="fw-bold">${st.toLocaleString()} FCFA</td>
+                            <td class="text-center">
+                                <button onclick="retirerArticleEdit(${index})" class="btn btn-sm btn-outline-danger border-0">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>`;
+                });
+            }
+
+            document.getElementById('tableauArticlesEdit').innerHTML = html;
+            document.getElementById('editTotalCommande').innerText = total.toLocaleString();
+            commandeEnEdition.montantTotal = total;
+        }
+
+        function ajusterQteEdit(index, delta) {
+            const nouvelleQte = commandeEnEdition.lignes[index].quantite + delta;
+            if (nouvelleQte <= 0) {
+                retirerArticleEdit(index);
+            } else {
+                commandeEnEdition.lignes[index].quantite = nouvelleQte;
+                afficherArticlesEdit();
+            }
+        }
+
+        function retirerArticleEdit(index) {
+            commandeEnEdition.lignes.splice(index, 1);
+            afficherArticlesEdit();
+        }
+
+        function ajouterArticleEdit() {
+            const prodId = parseInt(document.getElementById('selectProduitEdit').value);
+            const qte = parseInt(document.getElementById('qteProduitEdit').value);
+
+            if (!prodId || isNaN(qte) || qte <= 0) return;
+
+            const prod = listeProduits.find(p => p.id === prodId);
+            if (!prod) return;
+
+            if (!commandeEnEdition.lignes) {
+                commandeEnEdition.lignes = [];
+            }
+
+            const existant = commandeEnEdition.lignes.find(l => l.produit && l.produit.id === prodId);
+            if (existant) {
+                existant.quantite += qte;
+            } else {
+                commandeEnEdition.lignes.push({
+                    produit: prod,
+                    quantite: qte,
+                    prixUnitaire: prod.prixVente,
+                    sousTotal: prod.prixVente * qte
+                });
+            }
+
+            afficherArticlesEdit();
+        }
+
+        async function soumettreModificationCommande() {
+            commandeEnEdition.nomClient = document.getElementById('editCmdClient').value;
+            commandeEnEdition.statutPaiement = document.getElementById('editCmdPaiement').value;
+            commandeEnEdition.statutLivraison = document.getElementById('editCmdLivraison').value;
+
+            try {
+                const res = await fetch(`${API_COMMANDES}/${commandeEnEdition.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(commandeEnEdition)
+                });
+
+                if (res.ok) {
+                    const modalEl = document.getElementById('modalModifierCommande');
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    if (modal) modal.hide();
+
+                    await chargerHistorique();
+                    await chargerProduits();
+                    alert("Commande et stocks mis à jour avec succès !");
+                } else {
+                    const errMessage = await res.text();
+                    alert("Erreur lors de la mise à jour : " + errMessage);
+                }
+            } catch (err) {
+                console.error("Erreur d'envoi HTTP:", err);
+                alert("Erreur réseau lors de la communication avec le serveur.");
+            }
+        }
+
+        async function chargerCorbeille() {
+            try {
+                const res = await fetch(`${API_PRODUITS}/corbeille`);
+                if (!res.ok) return;
+                const produitsArchives = await res.json();
+
+                let htmlCorbeille = '';
+                if (!Array.isArray(produitsArchives) || produitsArchives.length === 0) {
+                    htmlCorbeille = `<tr><td colspan="4" class="text-center text-muted">La corbeille est vide.</td></tr>`;
+                } else {
+                    produitsArchives.forEach(p => {
+                        htmlCorbeille += `
+                            <tr class="table-light">
+                                <td><strong>${p.nom}</strong></td>
+                                <td>${(p.prixVente || 0).toLocaleString()} FCFA</td>
+                                <td><span class="badge bg-secondary">${p.quantiteStock || 0}</span></td>
+                                <td>
+                                    <button onclick="restaurerProduit(${p.id})" class="btn btn-sm btn-success fw-bold">
+                                        <i class="fa-solid fa-rotate-left me-1"></i> Restaurer
+                                    </button>
+                                </td>
+                            </tr>`;
+                    });
+                }
+
+                if (document.getElementById('tableauCorbeille')) document.getElementById('tableauCorbeille').innerHTML = htmlCorbeille;
+                if (document.getElementById('badgeCorbeille')) document.getElementById('badgeCorbeille').innerText = produitsArchives.length || 0;
+            } catch (err) {
+                console.error("Erreur corbeille:", err);
+            }
+        }
+
+        const formProd = document.getElementById('formProduit');
+        if (formProd) {
+            formProd.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const produit = {
+                    nom: document.getElementById('nom').value,
+                    prixAchat: parseFloat(document.getElementById('prixAchat').value),
+                    prixVente: parseFloat(document.getElementById('prixVente').value),
+                    quantiteStock: parseInt(document.getElementById('quantiteStock').value),
+                    seuilAlerte: parseInt(document.getElementById('seuilAlerte').value),
+                    actif: true
+                };
+
+                const res = await fetch(API_PRODUITS, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(produit)
+                });
+
+                if (res.ok) {
+                    document.getElementById('formProduit').reset();
+                    alert("Article enregistré avec succès !");
+                    await chargerProduits();
+                }
+            });
+        }
+
+        async function supprimerProduit(id) {
+            if (confirm("Voulez-vous déplacer cet article dans la corbeille ?")) {
+                await fetch(`${API_PRODUITS}/${id}`, { method: 'DELETE' });
+                await chargerProduits();
+            }
+        }
+
+        async function restaurerProduit(id) {
+            await fetch(`${API_PRODUITS}/${id}/restaurer`, { method: 'PUT' });
+            await chargerProduits();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setInterval(mettreAJourHorloge, 1000);
+            mettreAJourHorloge();
+            chargerProduits();
+        });
+    </script>
+</body>
+</html>
