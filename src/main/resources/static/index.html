@@ -211,6 +211,9 @@
                 <button class="nav-item-btn" onclick="switchSection('credit-client', this)">
                     <i class="fa-solid fa-hand-holding-dollar"></i> CREDIT CLIENT
                 </button>
+                <button class="nav-item-btn" onclick="switchSection('reglement-credit', this)">
+                    <i class="fa-solid fa-money-bill-wave"></i> RÈGLEMENT CRÉDIT
+                </button>
                 <button class="nav-item-btn" onclick="switchSection('ajout', this)">
                     <i class="fa-solid fa-plus-circle"></i> NOUVEAU PRODUIT
                 </button>
@@ -470,6 +473,46 @@
                                 </thead>
                                 <tbody id="tableauCreditsClients">
                                     <tr><td colspan="5" class="text-center text-muted">Aucun crédit enregistré.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION NOUVELLE : REGLEMENT DE CREDIT CLIENT -->
+                <section id="page-reglement-credit" class="page-section" style="display: none;">
+                    <div class="card p-4">
+                        <h5 class="fw-bold mb-3"><i class="fa-solid fa-money-bill-wave me-2"></i>Règlement de Crédit Client</h5>
+                        <div class="row g-3 mb-4 bg-light p-3 rounded align-items-end border">
+                            <div class="col-md-5">
+                                <label class="form-label fw-semibold">Sélectionner un Client endetté</label>
+                                <select id="selectClientDette" class="form-select" onchange="rafraichirMontantDette()"></select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Montant à payer (FCFA)</label>
+                                <input type="number" id="inputMontantReglement" class="form-control" min="1" placeholder="Ex: 5000">
+                            </div>
+                            <div class="col-md-3">
+                                <button type="button" onclick="effectuerReglementDette()" class="btn btn-success w-100 fw-bold">
+                                    <i class="fa-solid fa-check me-1"></i> Valider le Paiement
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Client</th>
+                                        <th>Contact</th>
+                                        <th>Motif / Article</th>
+                                        <th class="text-end">Montant Restant</th>
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableauReglementCredits">
+                                    <tr><td colspan="6" class="text-center text-muted">Aucun crédit à régler.</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -782,12 +825,18 @@
                 'vente': 'VENTE / NOUVELLE COMMANDE',
                 'stock': 'STOCK GENERAL DES ARTICLES',
                 'credit-client': 'CREDIT CLIENT',
+                'reglement-credit': 'RÈGLEMENT DE CRÉDIT CLIENT',
                 'ajout': 'AJOUTER UN PRODUIT',
                 'historique': 'HISTORIQUE DES TRANSACTIONS',
                 'corbeille': 'CORBEILLE DES ARTICLES'
             };
             const titleEl = document.getElementById('current-page-title');
             if (titleEl) titleEl.innerText = titleMap[sectionId] || 'GESTION';
+
+            if (sectionId === 'reglement-credit') {
+                chargerSelectReglementDette();
+                afficherTableauReglementDette();
+            }
         }
 
         function Unites(nombre) {
@@ -1204,6 +1253,117 @@
 
             if (document.getElementById('tableauCreditsClients')) document.getElementById('tableauCreditsClients').innerHTML = html;
             if (document.getElementById('totalCreditClient')) document.getElementById('totalCreditClient').innerText = total.toLocaleString() + ' FCFA';
+        }
+
+        // FONCTIONS POUR LA SECTION REGLEMENT CRÉDIT
+        function chargerSelectReglementDette() {
+            const select = document.getElementById('selectClientDette');
+            if (!select) return;
+
+            let html = '<option value="">-- Choisir un client endetté --</option>';
+            creditsClients.forEach((c, index) => {
+                if (c.montant > 0) {
+                    html += `<option value="${index}">${c.nom} (${c.motif}) - Restant : ${c.montant.toLocaleString()} FCFA</option>`;
+                }
+            });
+            select.innerHTML = html;
+        }
+
+        function rafraichirMontantDette() {
+            const select = document.getElementById('selectClientDette');
+            const inputMontant = document.getElementById('inputMontantReglement');
+            if (!select || !inputMontant) return;
+
+            const index = select.value;
+            if (index !== '' && creditsClients[index]) {
+                inputMontant.value = creditsClients[index].montant;
+            } else {
+                inputMontant.value = '';
+            }
+        }
+
+        function effectuerReglementDette() {
+            const select = document.getElementById('selectClientDette');
+            const inputMontant = document.getElementById('inputMontantReglement');
+
+            if (!select || select.value === '') {
+                return alert("Veuillez sélectionner un client endetté.");
+            }
+
+            const index = parseInt(select.value);
+            const montantPaye = parseFloat(inputMontant.value);
+
+            if (isNaN(montantPaye) || montantPaye <= 0) {
+                return alert("Veuillez saisir un montant valide à payer.");
+            }
+
+            const credit = creditsClients[index];
+            if (montantPaye > credit.montant) {
+                return alert("Le montant versé ne peut pas être supérieur au restant dû (" + credit.montant + " FCFA).");
+            }
+
+            credit.montant -= montantPaye;
+            alert(`Paiement de ${montantPaye.toLocaleString()} FCFA enregistré pour ${credit.nom}. Restant dû : ${credit.montant.toLocaleString()} FCFA.`);
+
+            afficherCreditsClients();
+            chargerSelectReglementDette();
+            afficherTableauReglementDette();
+            inputMontant.value = '';
+        }
+
+        function reglerCreditRapide(index) {
+            const credit = creditsClients[index];
+            if (!credit) return;
+
+            const saisie = prompt(`Règlement de dette pour ${credit.nom}\nReste à payer : ${credit.montant} FCFA\n\nSaisissez le montant versé :`, credit.montant);
+            if (saisie === null) return;
+
+            const montantPaye = parseFloat(saisie);
+            if (isNaN(montantPaye) || montantPaye <= 0) {
+                return alert("Montant invalide.");
+            }
+
+            if (montantPaye > credit.montant) {
+                return alert("Le montant versé dépasse la dette.");
+            }
+
+            credit.montant -= montantPaye;
+            alert(`Règlement effectué avec succès. Restant : ${credit.montant.toLocaleString()} FCFA.`);
+
+            afficherCreditsClients();
+            chargerSelectReglementDette();
+            afficherTableauReglementDette();
+        }
+
+        function afficherTableauReglementDette() {
+            const tbody = document.getElementById('tableauReglementCredits');
+            if (!tbody) return;
+
+            let html = '';
+            const creditsEnCours = creditsClients.filter(c => c.montant > 0);
+
+            if (creditsClients.length === 0 || creditsEnCours.length === 0) {
+                html = `<tr><td colspan="6" class="text-center text-muted">Aucun crédit en cours de règlement.</td></tr>`;
+            } else {
+                creditsClients.forEach((c, index) => {
+                    if (c.montant > 0) {
+                        html += `
+                            <tr>
+                                <td>${index + 1}</td>
+                                <td><strong>${c.nom}</strong></td>
+                                <td>${c.contact}</td>
+                                <td>${c.motif}</td>
+                                <td class="text-end fw-bold text-danger">${c.montant.toLocaleString()} FCFA</td>
+                                <td class="text-center">
+                                    <button class="btn btn-sm btn-outline-success fw-bold" onclick="reglerCreditRapide(${index})">
+                                        <i class="fa-solid fa-hand-holding-dollar me-1"></i> Régler
+                                    </button>
+                                </td>
+                            </tr>`;
+                    }
+                });
+            }
+            tbody.innerHTML = html;
         }
 
         function ouvrirModalEdition(id) {
